@@ -1,0 +1,99 @@
+/* ═══════════ Pill (Métricas) ═══════════ */
+.mac-pill {
+  background-color: rgba(30, 30, 30, 0.78);
+  border-radius: 32px;
+  padding: 12px 18px;
+  spacing: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mac-cell {
+  spacing: 6px;
+}
+
+.mac-cell-icon {
+  color: rgba(255, 255, 255, 0.92);
+  icon-size: 22px;
+}
+
+.mac-cell-label {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ═══════════ Cards (Batería / Música / Clima) ═══════════ */
+.mac-card {
+  background-color: rgba(30, 30, 30, 0.78);
+  border-radius: 22px;
+  padding: 14px 18px;
+  spacing: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 110px;
+}
+
+.mac-card-wide {
+  min-width: 280px;
+  padding: 14px 22px;
+}
+
+.mac-card-value {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mac-card-sub {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* ═══════════ Música ═══════════ */
+.mac-music-cover {
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mac-music-title {
+  font-size: 16px;
+  font-weight: 600;
+  padding-top: 2px;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.mac-music-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  padding-top: 2px;
+}
+
+/* ═══════════ Edit mode ═══════════ */
+.mac-edit-mode {
+  border: 2px dashed rgba(96, 165, 250, 0.85);
+  box-shadow: 0 0 18px rgba(96, 165, 250, 0.35);
+}
+
+.mac-drag-coords {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* ═══════════ Clima ═══════════ */
+.mac-weather-temp {
+  font-size: 22px;
+}
+
+.mac-weather-city {
+  font-weight: 500;
+}

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+
+  <!-- ═══════════ Métricas (root, retro-compatible) ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets"
+          path="/org/gnome/shell/extensions/mac-widgets/">
+
+    <key name="enabled" type="b">
+      <default>true</default>
+      <summary>Enable metrics widget</summary>
+      <description>Show the metrics pill (CPU/RAM/Disk/Temp/GPU)</description>
+    </key>
+
+    <key name="edit-mode" type="b">
+      <default>false</default>
+      <summary>Edit mode (global)</summary>
+      <description>When true, all widgets become interactive on top of windows and can be dragged with the mouse. Disable when done positioning.</description>
+    </key>
+
+    <key name="opacity" type="i">
+      <default>78</default>
+      <range min="0" max="100"/>
+      <summary>Background opacity</summary>
+      <description>Pill background opacity (0–100)</description>
+    </key>
+
+    <key name="cell-size" type="i">
+      <default>56</default>
+      <range min="32" max="120"/>
+      <summary>Cell size in pixels</summary>
+      <description>Diameter of each metric circle</description>
+    </key>
+
+    <key name="center-horizontally" type="b">
+      <default>true</default>
+      <summary>Center horizontally</summary>
+      <description>Ignore position-x and center on monitor</description>
+    </key>
+
+    <key name="position-x" type="i">
+      <default>100</default>
+      <range min="0" max="10000"/>
+      <summary>X position</summary>
+      <description>px from left edge</description>
+    </key>
+
+    <key name="position-y" type="i">
+      <default>50</default>
+      <range min="0" max="10000"/>
+      <summary>Y position</summary>
+      <description>px from top edge</description>
+    </key>
+
+    <key name="monitor" type="i">
+      <default>-1</default>
+      <range min="-1" max="32"/>
+      <summary>Target monitor</summary>
+      <description>-1 = primary, 0..N = monitor index</description>
+    </key>
+
+  </schema>
+
+  <!-- ═══════════ Batería ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets.battery"
+          path="/org/gnome/shell/extensions/mac-widgets/battery/">
+
+    <key name="enabled" type="b"><default>false</default><summary>Enabled</summary><description>Show battery widget</description></key>
+    <key name="opacity" type="i"><default>78</default><range min="0" max="100"/><summary>Opacity</summary><description>Card opacity (0-100)</description></key>
+    <key name="center-horizontally" type="b"><default>false</default><summary>Center</summary><description>Center on monitor</description></key>
+    <key name="position-x" type="i"><default>40</default><range min="0" max="10000"/><summary>X</summary><description>px</description></key>
+    <key name="position-y" type="i"><default>140</default><range min="0" max="10000"/><summary>Y</summary><description>px</description></key>
+    <key name="monitor" type="i"><default>-1</default><range min="-1" max="32"/><summary>Monitor</summary><description>-1 = primary</description></key>
+
+  </schema>
+
+  <!-- ═══════════ Música (MPRIS) ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets.music"
+          path="/org/gnome/shell/extensions/mac-widgets/music/">
+
+    <key name="enabled" type="b"><default>false</default><summary>Enabled</summary><description>Show music widget</description></key>
+    <key name="opacity" type="i"><default>78</default><range min="0" max="100"/><summary>Opacity</summary><description>Card opacity (0-100)</description></key>
+    <key name="center-horizontally" type="b"><default>false</default><summary>Center</summary><description>Center on monitor</description></key>
+    <key name="position-x" type="i"><default>40</default><range min="0" max="10000"/><summary>X</summary><description>px</description></key>
+    <key name="position-y" type="i"><default>240</default><range min="0" max="10000"/><summary>Y</summary><description>px</description></key>
+    <key name="monitor" type="i"><default>-1</default><range min="-1" max="32"/><summary>Monitor</summary><description>-1 = primary</description></key>
+    <key name="preferred-player" type="s">
+      <default>""</default>
+      <summary>Preferred MPRIS player</summary>
+      <description>Bus name suffix (e.g. "spotify"). Empty = first available.</description>
+    </key>
+
+  </schema>
+
+  <!-- ═══════════ Clima (Open-Meteo) ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets.weather"
+          path="/org/gnome/shell/extensions/mac-widgets/weather/">
+
+    <key name="enabled" type="b"><default>false</default><summary>Enabled</summary><description>Show weather widget</description></key>
+    <key name="opacity" type="i"><default>78</default><range min="0" max="100"/><summary>Opacity</summary><description>Card opacity (0-100)</description></key>
+    <key name="center-horizontally" type="b"><default>false</default><summary>Center</summary><description>Center on monitor</description></key>
+    <key name="position-x" type="i"><default>40</default><range min="0" max="10000"/><summary>X</summary><description>px</description></key>
+    <key name="position-y" type="i"><default>360</default><range min="0" max="10000"/><summary>Y</summary><description>px</description></key>
+    <key name="monitor" type="i"><default>-1</default><range min="-1" max="32"/><summary>Monitor</summary><description>-1 = primary</description></key>
+
+    <key name="city" type="s">
+      <default>"Quito"</default>
+      <summary>City name</summary>
+      <description>Used for geocoding lookup</description>
+    </key>
+    <key name="units" type="s">
+      <default>"metric"</default>
+      <choices>
+        <choice value="metric"/>
+        <choice value="imperial"/>
+      </choices>
+      <summary>Units</summary>
+      <description>metric = °C, imperial = °F</description>
+    </key>
+    <key name="latitude" type="d">
+      <default>0.0</default>
+      <summary>Cached latitude</summary>
+      <description>Resolved from city via geocoding</description>
+    </key>
+    <key name="longitude" type="d">
+      <default>0.0</default>
+      <summary>Cached longitude</summary>
+      <description>Resolved from city via geocoding</description>
+    </key>
+    <key name="display-name" type="s">
+      <default>""</default>
+      <summary>Resolved place name</summary>
+      <description>e.g. "Quito, Ecuador"</description>
+    </key>
+
+  </schema>
+
+</schemalist>
