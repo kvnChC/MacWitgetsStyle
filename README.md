@@ -2,7 +2,7 @@
 
 > Widgets flotantes estilo macOS para GNOME Shell — métricas del sistema, batería, música y clima en el fondo del escritorio.
 
-![GNOME Shell 49+](https://img.shields.io/badge/GNOME%20Shell-49%2B-blue)
+![GNOME Shell 49–50](https://img.shields.io/badge/GNOME%20Shell-49%E2%80%9350-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
@@ -180,7 +180,7 @@ gsettings --schemadir schemas/ set org.gnome.shell.extensions.mac-widgets.weathe
 
 ## 📋 Requisitos
 
-- **GNOME Shell 49+**
+- **GNOME Shell 49 o 50**
 - **Soup 3.0**, **Gio**, **GdkPixbuf**, **St**, **Clutter**, **Adwaita 1.4+** (todos vienen con GNOME por defecto)
 - Para GPU NVIDIA: paquete `nvidia-utils` (`nvidia-smi` en `$PATH`)
 
