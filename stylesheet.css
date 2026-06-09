@@ -1,10 +1,8 @@
 /* ═══════════ Pill (Métricas) ═══════════ */
+/* Fondo, borde, radio y sombra los gestiona JS (_applySurface) */
 .mac-pill {
-  background-color: rgba(30, 30, 30, 0.78);
-  border-radius: 32px;
   padding: 12px 18px;
   spacing: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mac-cell {
@@ -17,68 +15,60 @@
 }
 
 .mac-cell-label {
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.95);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
 }
 
 /* ═══════════ Cards (Batería / Música / Clima) ═══════════ */
 .mac-card {
-  background-color: rgba(30, 30, 30, 0.78);
-  border-radius: 22px;
   padding: 14px 18px;
   spacing: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   min-width: 110px;
 }
 
 .mac-card-wide {
   min-width: 280px;
-  padding: 14px 22px;
+  padding: 16px 22px;
 }
 
 .mac-card-value {
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 18px;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 19px;
+  font-weight: 700;
   text-align: center;
 }
 
 .mac-card-sub {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.62);
   font-size: 11px;
   text-align: center;
 }
 
 /* ═══════════ Música ═══════════ */
 .mac-music-cover {
-  border-radius: 12px;
+  border-radius: 14px;
   margin-bottom: 12px;
   background-color: rgba(255, 255, 255, 0.06);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mac-music-title {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   padding-top: 2px;
-  color: rgba(255, 255, 255, 0.96);
+  color: rgba(255, 255, 255, 0.97);
 }
 
 .mac-music-artist {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.58);
   padding-top: 2px;
 }
 
-/* ═══════════ Edit mode ═══════════ */
-.mac-edit-mode {
-  border: 2px dashed rgba(96, 165, 250, 0.85);
-  box-shadow: 0 0 18px rgba(96, 165, 250, 0.35);
-}
-
+/* ═══════════ Badge de coordenadas (drag en modo edición) ═══════════ */
 .mac-drag-coords {
   background-color: rgba(0, 0, 0, 0.85);
   color: rgba(255, 255, 255, 0.95);
@@ -89,11 +79,100 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
+.mac-music-controls {
+  spacing: 16px;
+  padding-top: 10px;
+}
+
+.mac-music-btn {
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  padding: 6px;
+  transition-duration: 120ms;
+}
+
+.mac-music-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.mac-music-btn:active {
+  background-color: rgba(255, 255, 255, 0.20);
+}
+
 /* ═══════════ Clima ═══════════ */
 .mac-weather-temp {
-  font-size: 22px;
+  font-size: 26px;
+  font-weight: 700;
 }
 
 .mac-weather-city {
-  font-weight: 500;
+  font-weight: 600;
+}
+
+/* ═══════════ Reloj ═══════════ */
+.mac-clock-time {
+  color: rgba(255, 255, 255, 0.97);
+  font-size: 38px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mac-clock-date {
+  font-size: 12px;
+  padding-top: 2px;
+}
+
+/* ═══════════ Pronóstico ═══════════ */
+.mac-forecast-days {
+  spacing: 16px;
+  padding-top: 8px;
+}
+
+.mac-forecast-day {
+  spacing: 4px;
+  min-width: 48px;
+}
+
+.mac-forecast-dow {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mac-forecast-max {
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mac-forecast-min {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ═══════════ Top procesos ═══════════ */
+.mac-procs {
+  min-width: 220px;
+}
+
+.mac-procs-header {
+  font-weight: 700;
+  padding-bottom: 6px;
+}
+
+.mac-procs-rows {
+  spacing: 4px;
+}
+
+.mac-procs-name {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+}
+
+.mac-procs-value {
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 12px;
 }

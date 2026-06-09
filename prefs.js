@@ -6,33 +6,80 @@ import Gtk from "gi://Gtk";
 import Soup from "gi://Soup?version=3.0";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 
-const SCHEMA_ROOT    = "org.gnome.shell.extensions.mac-widgets";
-const SCHEMA_BATTERY = "org.gnome.shell.extensions.mac-widgets.battery";
-const SCHEMA_MUSIC   = "org.gnome.shell.extensions.mac-widgets.music";
-const SCHEMA_WEATHER = "org.gnome.shell.extensions.mac-widgets.weather";
+const SCHEMA_ROOT     = "org.gnome.shell.extensions.mac-widgets";
+const SCHEMA_BATTERY  = "org.gnome.shell.extensions.mac-widgets.battery";
+const SCHEMA_MUSIC    = "org.gnome.shell.extensions.mac-widgets.music";
+const SCHEMA_WEATHER  = "org.gnome.shell.extensions.mac-widgets.weather";
+const SCHEMA_CLOCK    = "org.gnome.shell.extensions.mac-widgets.clock";
+const SCHEMA_FORECAST = "org.gnome.shell.extensions.mac-widgets.forecast";
+const SCHEMA_PROC     = "org.gnome.shell.extensions.mac-widgets.processes";
 
 export default class MacWidgetsPrefs extends ExtensionPreferences {
   fillPreferencesWindow(window) {
     // Las settings raíz comparten edit-mode entre páginas
     this._rootSettings = this.getSettings(SCHEMA_ROOT);
+    window.add(this._buildClockPage());
     window.add(this._buildMetricsPage());
     window.add(this._buildBatteryPage());
     window.add(this._buildMusicPage());
     window.add(this._buildWeatherPage());
+    window.add(this._buildForecastPage());
+    window.add(this._buildProcessesPage());
   }
 
   _editModeGroup() {
     const group = new Adw.PreferencesGroup({
-      title: "Edición",
-      description: "Activa para arrastrar widgets a su posición. Mientras esté ON, los widgets aparecen encima de las ventanas con borde celeste.",
+      title: "Global",
+      description: "Ajustes compartidos por todos los widgets.",
     });
+
     const row = new Adw.SwitchRow({
       title: "Modo edición (mover widgets)",
       subtitle: "Arrástralos con el mouse y desactívalo al terminar",
     });
     this._rootSettings.bind("edit-mode", row, "active", Gio.SettingsBindFlags.DEFAULT);
     group.add(row);
+
+    const vibrancyRow = new Adw.SwitchRow({
+      title: "Vibrancy (vidrio esmerilado)",
+      subtitle: "Difumina lo que hay detrás de cada widget, estilo macOS",
+    });
+    this._rootSettings.bind("vibrancy", vibrancyRow, "active", Gio.SettingsBindFlags.DEFAULT);
+    group.add(vibrancyRow);
+
+    group.add(this._accentRow());
+
     return group;
+  }
+
+  _accentRow() {
+    const row = new Adw.ActionRow({
+      title: "Color de acento",
+      subtitle: "Anillos de métricas/batería y borde del modo edición",
+    });
+
+    const rgba = new Gdk.RGBA();
+    rgba.parse(this._rootSettings.get_string("accent-color"));
+
+    const button = new Gtk.ColorDialogButton({
+      dialog: new Gtk.ColorDialog({ with_alpha: false }),
+      rgba,
+      valign: Gtk.Align.CENTER,
+    });
+
+    button.connect("notify::rgba", () => {
+      const c = button.get_rgba();
+      const hex =
+        "#" +
+        [c.red, c.green, c.blue]
+          .map((x) => Math.round(x * 255).toString(16).padStart(2, "0"))
+          .join("");
+      this._rootSettings.set_string("accent-color", hex);
+    });
+
+    row.add_suffix(button);
+    row.activatable_widget = button;
+    return row;
   }
 
   // ───────────── Métricas (root) ─────────────
@@ -87,9 +134,18 @@ export default class MacWidgetsPrefs extends ExtensionPreferences {
     appearance.add(this._spinRow(settings, "opacity", "Opacidad del fondo", "0 = transparente, 100 = sólido", 0, 100));
     page.add(appearance);
 
+    const controlsGroup = new Adw.PreferencesGroup({ title: "Controles" });
+    const controlsRow = new Adw.SwitchRow({
+      title: "Mostrar controles",
+      subtitle: "Botones play/pausa/anterior/siguiente. El widget pasa a flotar sobre las ventanas.",
+    });
+    settings.bind("show-controls", controlsRow, "active", Gio.SettingsBindFlags.DEFAULT);
+    controlsGroup.add(controlsRow);
+    page.add(controlsGroup);
+
     const playerGroup = new Adw.PreferencesGroup({
       title: "Reproductor",
-      description: "Solo info — usa las teclas multimedia (Fn+F7/F8/F9) para play/pausa/saltar",
+      description: "Usa las teclas multimedia o los controles del widget para play/pausa/saltar",
     });
 
     const entry = new Adw.EntryRow({
@@ -211,6 +267,98 @@ export default class MacWidgetsPrefs extends ExtensionPreferences {
 
     testGroup.add(testRow);
     page.add(testGroup);
+
+    page.add(this._positionGroup(settings));
+    return page;
+  }
+
+  // ───────────── Reloj ─────────────
+  _buildClockPage() {
+    const settings = this.getSettings(SCHEMA_CLOCK);
+    const page = new Adw.PreferencesPage({
+      title: "Reloj",
+      icon_name: "preferences-system-time-symbolic",
+    });
+
+    page.add(this._editModeGroup());
+    page.add(this._enableGroup(settings, "Mostrar widget de reloj"));
+
+    const appearance = new Adw.PreferencesGroup({ title: "Apariencia" });
+    appearance.add(this._spinRow(settings, "opacity", "Opacidad del fondo", "0 = transparente, 100 = sólido", 0, 100));
+    page.add(appearance);
+
+    const fmt = new Adw.PreferencesGroup({ title: "Formato" });
+
+    const h24 = new Adw.SwitchRow({ title: "Formato 24 horas", subtitle: "Desactiva para AM/PM" });
+    settings.bind("format-24h", h24, "active", Gio.SettingsBindFlags.DEFAULT);
+    fmt.add(h24);
+
+    const secs = new Adw.SwitchRow({ title: "Mostrar segundos" });
+    settings.bind("show-seconds", secs, "active", Gio.SettingsBindFlags.DEFAULT);
+    fmt.add(secs);
+
+    const date = new Adw.SwitchRow({ title: "Mostrar fecha" });
+    settings.bind("show-date", date, "active", Gio.SettingsBindFlags.DEFAULT);
+    fmt.add(date);
+
+    page.add(fmt);
+    page.add(this._positionGroup(settings));
+    return page;
+  }
+
+  // ───────────── Pronóstico ─────────────
+  _buildForecastPage() {
+    const settings = this.getSettings(SCHEMA_FORECAST);
+    const page = new Adw.PreferencesPage({
+      title: "Pronóstico",
+      icon_name: "weather-few-clouds-symbolic",
+    });
+
+    page.add(this._editModeGroup());
+    page.add(this._enableGroup(settings, "Mostrar widget de pronóstico"));
+
+    const appearance = new Adw.PreferencesGroup({ title: "Apariencia" });
+    appearance.add(this._spinRow(settings, "opacity", "Opacidad del fondo", "0 = transparente, 100 = sólido", 0, 100));
+    appearance.add(this._spinRow(settings, "days", "Días", "Cuántos días mostrar", 3, 7));
+    page.add(appearance);
+
+    const info = new Adw.PreferencesGroup({
+      title: "Ubicación",
+      description: "Usa la misma ciudad y unidades configuradas en la página de Clima.",
+    });
+    page.add(info);
+
+    page.add(this._positionGroup(settings));
+    return page;
+  }
+
+  // ───────────── Top procesos ─────────────
+  _buildProcessesPage() {
+    const settings = this.getSettings(SCHEMA_PROC);
+    const page = new Adw.PreferencesPage({
+      title: "Procesos",
+      icon_name: "utilities-system-monitor-symbolic",
+    });
+
+    page.add(this._editModeGroup());
+    page.add(this._enableGroup(settings, "Mostrar widget de procesos"));
+
+    const appearance = new Adw.PreferencesGroup({ title: "Apariencia" });
+    appearance.add(this._spinRow(settings, "opacity", "Opacidad del fondo", "0 = transparente, 100 = sólido", 0, 100));
+    appearance.add(this._spinRow(settings, "count", "Cuántos procesos", "Número de filas a mostrar", 3, 6));
+    page.add(appearance);
+
+    const sortGroup = new Adw.PreferencesGroup({ title: "Orden" });
+    const sortList = new Gtk.StringList();
+    sortList.append("CPU");
+    sortList.append("Memoria");
+    const sortRow = new Adw.ComboRow({ title: "Ordenar por", model: sortList });
+    sortRow.set_selected(settings.get_string("sort-by") === "memory" ? 1 : 0);
+    sortRow.connect("notify::selected", () => {
+      settings.set_string("sort-by", sortRow.get_selected() === 1 ? "memory" : "cpu");
+    });
+    sortGroup.add(sortRow);
+    page.add(sortGroup);
 
     page.add(this._positionGroup(settings));
     return page;
