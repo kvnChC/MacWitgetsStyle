@@ -4,6 +4,7 @@ import Soup from "gi://Soup?version=3.0";
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import { BaseWidget } from "./base.js";
+import { wmoIcon, wmoText } from "./wmo.js";
 
 const REFRESH_SECONDS = 15 * 60; // 15 min
 const GEO_URL = "https://geocoding-api.open-meteo.com/v1/search";
@@ -17,6 +18,8 @@ export class WeatherWidget extends BaseWidget {
   }
 
   _build() {
+    this._surfaceRadius = 18;
+
     const card = new St.BoxLayout({
       style_class: "mac-card",
       vertical: true,
@@ -56,13 +59,7 @@ export class WeatherWidget extends BaseWidget {
     card.add_child(this._cityLabel);
 
     this._actor = card;
-    this._applyOpacity();
-  }
-
-  _applyOpacity() {
-    if (!this._actor) return;
-    const alpha = this._settings.get_int("opacity") / 100;
-    this._actor.set_style(`background-color: rgba(30, 30, 30, ${alpha});`);
+    this._applySurface();
   }
 
   _teardown() {
@@ -114,7 +111,7 @@ export class WeatherWidget extends BaseWidget {
       );
     }
     if (key === "opacity") {
-      this._applyOpacity();
+      this._applySurface();
     }
   }
 
@@ -190,8 +187,8 @@ export class WeatherWidget extends BaseWidget {
     const code = current.weather_code;
 
     this._tempLabel.set_text(`${t}${tSym}`);
-    this._condLabel.set_text(this._wmoText(code));
-    this._icon.set_icon_name(this._wmoIcon(code));
+    this._condLabel.set_text(wmoText(code));
+    this._icon.set_icon_name(wmoIcon(code));
   }
 
   _setError(msg) {
@@ -226,51 +223,4 @@ export class WeatherWidget extends BaseWidget {
     );
   }
 
-  _wmoIcon(code) {
-    if (code === 0) return "weather-clear-symbolic";
-    if (code <= 2) return "weather-few-clouds-symbolic";
-    if (code === 3) return "weather-overcast-symbolic";
-    if (code <= 48) return "weather-fog-symbolic";
-    if (code <= 57) return "weather-showers-scattered-symbolic";
-    if (code <= 67) return "weather-showers-symbolic";
-    if (code <= 77) return "weather-snow-symbolic";
-    if (code <= 82) return "weather-showers-symbolic";
-    if (code <= 86) return "weather-snow-symbolic";
-    if (code >= 95) return "weather-storm-symbolic";
-    return "weather-clear-symbolic";
-  }
-
-  _wmoText(code) {
-    const map = {
-      0: "Despejado",
-      1: "Mayormente despejado",
-      2: "Parcialmente nublado",
-      3: "Nublado",
-      45: "Niebla",
-      48: "Niebla con escarcha",
-      51: "Llovizna ligera",
-      53: "Llovizna",
-      55: "Llovizna intensa",
-      56: "Llovizna helada",
-      57: "Llovizna helada intensa",
-      61: "Lluvia ligera",
-      63: "Lluvia",
-      65: "Lluvia intensa",
-      66: "Lluvia helada",
-      67: "Lluvia helada intensa",
-      71: "Nieve ligera",
-      73: "Nieve",
-      75: "Nieve intensa",
-      77: "Granos de nieve",
-      80: "Aguacero ligero",
-      81: "Aguacero",
-      82: "Aguacero intenso",
-      85: "Aguanieve",
-      86: "Aguanieve intensa",
-      95: "Tormenta",
-      96: "Tormenta con granizo",
-      99: "Tormenta intensa",
-    };
-    return map[code] ?? `Código ${code}`;
-  }
 }

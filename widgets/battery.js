@@ -2,7 +2,7 @@ import St from "gi://St";
 import Clutter from "gi://Clutter";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
-import { BaseWidget } from "./base.js";
+import { BaseWidget, rampColor, RAMP_AMBER, RAMP_RED, RAMP_GREEN } from "./base.js";
 
 const POLL_SECONDS = 5;
 const RING_SIZE = 64;
@@ -20,6 +20,8 @@ export class BatteryWidget extends BaseWidget {
       this._actor = null;
       return; // silent no-op (desktop sin batería)
     }
+
+    this._surfaceRadius = 18;
 
     const card = new St.BoxLayout({
       style_class: "mac-card",
@@ -67,17 +69,11 @@ export class BatteryWidget extends BaseWidget {
     this._charging = false;
 
     this._drawing.connect("repaint", (area) => this._drawRing(area));
-    this._applyOpacity();
-  }
-
-  _applyOpacity() {
-    if (!this._actor) return;
-    const alpha = this._settings.get_int("opacity") / 100;
-    this._actor.set_style(`background-color: rgba(30, 30, 30, ${alpha});`);
+    this._applySurface();
   }
 
   _handleSettingChange(key) {
-    if (key === "opacity") this._applyOpacity();
+    if (key === "opacity") this._applySurface();
   }
 
   _teardown() {
@@ -149,10 +145,9 @@ export class BatteryWidget extends BaseWidget {
   }
 
   _color(cap, charging) {
-    if (charging) return [0.29, 0.87, 0.50]; // verde brillante
-    if (cap < 20) return [0.94, 0.27, 0.27]; // rojo
-    if (cap < 50) return [0.98, 0.80, 0.08]; // amarillo
-    return [0.55, 0.81, 0.99];               // azul claro
+    if (charging) return RAMP_GREEN;
+    // Rampa inversa: rojo (vacío) → ámbar → acento (lleno)
+    return rampColor(cap / 100, [[0, RAMP_RED], [0.5, RAMP_AMBER], [1, this._accentRgb()]]);
   }
 
   _iconFor(cap, charging) {
@@ -184,9 +179,15 @@ export class BatteryWidget extends BaseWidget {
       let info;
       while ((info = enumr.next_file(null)) !== null) {
         const name = info.get_name();
-        if (!/^BAT\d+$/.test(name)) continue;
         const path = `/sys/class/power_supply/${name}`;
-        if (this._readString(`${path}/type`) === "Battery") return path;
+        // Identificar por type (Battery), no por el nombre: cubre BAT0/BAT1/CMB0/etc.
+        // y excluye UPS y la fuente de alimentación (Mains).
+        if (
+          this._readString(`${path}/type`) === "Battery" &&
+          this._readInt(`${path}/capacity`) !== null
+        ) {
+          return path;
+        }
       }
     } catch (e) {}
     return null;

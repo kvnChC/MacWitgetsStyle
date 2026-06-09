@@ -12,6 +12,9 @@ const MPRIS_PATH = "/org/mpris/MediaPlayer2";
 const MPRIS_PLAYER_XML = `
 <node>
   <interface name="org.mpris.MediaPlayer2.Player">
+    <method name="Next"/>
+    <method name="Previous"/>
+    <method name="PlayPause"/>
     <property name="PlaybackStatus" type="s" access="read"/>
     <property name="Metadata" type="a{sv}" access="read"/>
   </interface>
@@ -21,6 +24,7 @@ const MprisPlayerProxy = Gio.DBusProxy.makeProxyWrapper(MPRIS_PLAYER_XML);
 
 const COVER_SIZE = 100;
 const CACHE_SUBDIR = "mac-widgets@kevin";
+const CACHE_MAX_FILES = 60; // carátulas en disco antes de podar las más antiguas
 
 // Promisify una vez (idempotente — múltiples extensiones pueden hacerlo)
 Gio._promisify(GdkPixbuf.Pixbuf, "new_from_stream_async", "new_from_stream_finish");
@@ -37,9 +41,14 @@ export class MusicWidget extends BaseWidget {
     this._nameSubId = 0;
     this._currentArtUrl = null;
     this._artCancellable = null;
+    this._session = null;
+    // Con controles, el widget debe ser interactivo (vivir sobre las ventanas).
+    this._isInteractive = this._settings.get_boolean("show-controls");
   }
 
   _build() {
+    this._surfaceRadius = 18;
+
     const card = new St.BoxLayout({
       style_class: "mac-card mac-card-wide",
       vertical: true,
@@ -69,23 +78,58 @@ export class MusicWidget extends BaseWidget {
     card.add_child(this._titleLabel);
     card.add_child(this._artistLabel);
 
+    if (this._settings.get_boolean("show-controls")) {
+      card.add_child(this._buildControls());
+    }
+
     this._actor = card;
-    this._applyOpacity();
+    this._applySurface();
+  }
+
+  _buildControls() {
+    const bar = new St.BoxLayout({
+      style_class: "mac-music-controls",
+      vertical: false,
+      x_align: Clutter.ActorAlign.CENTER,
+    });
+
+    this._prevBtn = this._iconButton("media-skip-backward-symbolic", () =>
+      this._player?.PreviousRemote?.()
+    );
+    this._playBtn = this._iconButton("media-playback-start-symbolic", () =>
+      this._player?.PlayPauseRemote?.()
+    );
+    this._nextBtn = this._iconButton("media-skip-forward-symbolic", () =>
+      this._player?.NextRemote?.()
+    );
+
+    bar.add_child(this._prevBtn);
+    bar.add_child(this._playBtn);
+    bar.add_child(this._nextBtn);
+    return bar;
+  }
+
+  _iconButton(iconName, onClick) {
+    const btn = new St.Button({
+      style_class: "mac-music-btn",
+      child: new St.Icon({ icon_name: iconName, icon_size: 18 }),
+      can_focus: true,
+    });
+    btn.connect("clicked", () => onClick());
+    return btn;
   }
 
   _teardown() {
     this._coverIcon = null;
     this._titleLabel = null;
     this._artistLabel = null;
-  }
-
-  _applyOpacity() {
-    if (!this._actor) return;
-    const alpha = this._settings.get_int("opacity") / 100;
-    this._actor.set_style(`background-color: rgba(30, 30, 30, ${alpha});`);
+    this._prevBtn = null;
+    this._playBtn = null;
+    this._nextBtn = null;
   }
 
   _start() {
+    this._session = new Soup.Session();
     this._nameSubId = Gio.DBus.session.signal_subscribe(
       "org.freedesktop.DBus",
       "org.freedesktop.DBus",
@@ -108,14 +152,24 @@ export class MusicWidget extends BaseWidget {
       Gio.DBus.session.signal_unsubscribe(this._nameSubId);
       this._nameSubId = 0;
     }
+    if (this._session) {
+      this._session.abort();
+      this._session = null;
+    }
     this._dropPlayer();
   }
 
   _handleSettingChange(key) {
-    if (key === "opacity") this._applyOpacity();
+    if (key === "opacity") this._applySurface();
     if (key === "preferred-player") {
       this._dropPlayer();
       this._discoverPlayer();
+    }
+    if (key === "show-controls") {
+      // Cambia la interactividad → recrear el actor en la capa correcta.
+      this._isInteractive = this._settings.get_boolean("show-controls");
+      this._deactivate();
+      this._activate();
     }
   }
 
@@ -124,7 +178,20 @@ export class MusicWidget extends BaseWidget {
     if (!name.startsWith(MPRIS_PREFIX)) return;
 
     if (newOwner && !oldOwner) {
-      if (!this._busName) this._discoverPlayer();
+      if (!this._busName) {
+        this._discoverPlayer();
+        return;
+      }
+      // Si aparece el reproductor preferido y no es el que tenemos, cambiar a él.
+      const preferred = this._settings.get_string("preferred-player").toLowerCase();
+      if (
+        preferred &&
+        name.toLowerCase().includes(preferred) &&
+        !this._busName.toLowerCase().includes(preferred)
+      ) {
+        this._dropPlayer();
+        this._discoverPlayer();
+      }
     } else if (oldOwner && !newOwner) {
       if (name === this._busName) {
         this._dropPlayer();
@@ -216,16 +283,28 @@ export class MusicWidget extends BaseWidget {
 
     this._titleLabel.set_text(this._truncate(title, 38));
     this._artistLabel.set_text(this._truncate(artist, 38));
+    this._updatePlayIcon();
 
     if (artUrl !== this._currentArtUrl) {
       this._loadCoverArt(artUrl);
     }
   }
 
+  _updatePlayIcon() {
+    if (!this._playBtn) return;
+    const playing = this._player?.PlaybackStatus === "Playing";
+    this._playBtn.child.set_icon_name(
+      playing ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
+    );
+  }
+
   _setIdle() {
     if (!this._titleLabel) return;
     this._titleLabel.set_text("Sin reproducción");
     this._artistLabel.set_text("");
+    if (this._playBtn) {
+      this._playBtn.child.set_icon_name("media-playback-start-symbolic");
+    }
     this._clearCoverArt();
   }
 
@@ -293,19 +372,47 @@ export class MusicWidget extends BaseWidget {
     }
 
     if (scheme === "http" || scheme === "https") {
-      const session = new Soup.Session();
+      if (!this._session) return null;
       const msg = Soup.Message.new("GET", url);
-      const bytes = await session.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, cancellable);
+      const bytes = await this._session.send_and_read_async(msg, GLib.PRIORITY_DEFAULT, cancellable);
       if (!bytes) return null;
       if (msg.get_status() !== Soup.Status.OK) return null;
 
       await cacheFile.replace_contents_bytes_async(
         bytes, null, false, Gio.FileCreateFlags.NONE, cancellable
       );
+      this._pruneCache(cacheDir);
       return await cacheFile.read_async(GLib.PRIORITY_DEFAULT, cancellable);
     }
 
     return null;
+  }
+
+  // Mantiene la caché acotada: borra las carátulas más antiguas si se excede el tope.
+  _pruneCache(cacheDir) {
+    try {
+      const dir = Gio.File.new_for_path(cacheDir);
+      const enumr = dir.enumerate_children(
+        "standard::name,time::modified",
+        Gio.FileQueryInfoFlags.NONE,
+        null
+      );
+      const files = [];
+      let info;
+      while ((info = enumr.next_file(null)) !== null) {
+        files.push({
+          name: info.get_name(),
+          mtime: info.get_attribute_uint64("time::modified"),
+        });
+      }
+      if (files.length <= CACHE_MAX_FILES) return;
+      files.sort((a, b) => a.mtime - b.mtime); // más antiguos primero
+      for (const f of files.slice(0, files.length - CACHE_MAX_FILES)) {
+        try {
+          Gio.File.new_for_path(GLib.build_filenamev([cacheDir, f.name])).delete(null);
+        } catch (e) {}
+      }
+    } catch (e) {}
   }
 
   _unwrap(v) {

@@ -2,10 +2,13 @@ import St from "gi://St";
 import Clutter from "gi://Clutter";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
-import { BaseWidget } from "./base.js";
+import { BaseWidget, rampColor, RAMP_AMBER, RAMP_RED } from "./base.js";
 
 const UPDATE_SECONDS = 2;
 const TEMP_RING_MAX = 100;
+// nvidia-smi es caro de arrancar; lo consultamos 1 de cada N ticks (≈8 s).
+// El backend AMD lee un archivo y se actualiza en cada tick.
+const NVIDIA_EVERY = 4;
 
 export class MetricsWidget extends BaseWidget {
   constructor(extension) {
@@ -16,9 +19,13 @@ export class MetricsWidget extends BaseWidget {
   }
 
   _build() {
+    this._surfaceRadius = 32; // forma "pill"
     this._cellSize = this._settings.get_int("cell-size");
     this._ringWidth = Math.max(2, Math.round(this._cellSize / 14));
     this._iconSize = Math.round(this._cellSize * 0.4);
+
+    // Rampa continua: acento (bajo/ok) → ámbar → rojo (alto)
+    this._metricStops = [[0, this._accentRgb()], [0.55, RAMP_AMBER], [1, RAMP_RED]];
 
     const pill = new St.BoxLayout({
       style_class: "mac-pill",
@@ -29,7 +36,7 @@ export class MetricsWidget extends BaseWidget {
     if (this._gpuBackend) order.push("gpu");
 
     const defs = {
-      cpu:  ["system-run-symbolic", "%"],
+      cpu:  ["computer-chip-symbolic", "%"],
       ram:  ["media-flash-symbolic", "%"],
       disk: ["drive-harddisk-symbolic", "%"],
       temp: ["temperature-symbolic", "°C"],
@@ -44,7 +51,7 @@ export class MetricsWidget extends BaseWidget {
     }
 
     this._actor = pill;
-    this._applyOpacity();
+    this._applySurface();
   }
 
   _teardown() {
@@ -54,6 +61,7 @@ export class MetricsWidget extends BaseWidget {
   _start() {
     this._prevTotal = 0;
     this._prevIdle = 0;
+    this._tickCount = 0;
     this._tick();
     this._timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, UPDATE_SECONDS, () => {
       this._tick();
@@ -77,14 +85,8 @@ export class MetricsWidget extends BaseWidget {
       this._deactivate();
       this._activate();
     } else if (key === "opacity") {
-      this._applyOpacity();
+      this._applySurface();
     }
-  }
-
-  _applyOpacity() {
-    if (!this._actor) return;
-    const alpha = this._settings.get_int("opacity") / 100;
-    this._actor.set_style(`background-color: rgba(30, 30, 30, ${alpha});`);
   }
 
   _makeCell(iconName, suffix = "%") {
@@ -146,7 +148,7 @@ export class MetricsWidget extends BaseWidget {
       let scaled = cell.suffix === "°C" ? (cell.value / TEMP_RING_MAX) * 100 : cell.value;
       let p = Math.max(0, Math.min(100, scaled)) / 100;
       if (p > 0) {
-        let [r, g, b] = this._hexToRgb(this._getColor(scaled));
+        let [r, g, b] = rampColor(p, this._metricStops);
         cr.setSourceRGBA(r, g, b, 1);
         cr.setLineWidth(ringWidth);
         cr.setLineCap(1);
@@ -169,6 +171,7 @@ export class MetricsWidget extends BaseWidget {
   }
 
   _tick() {
+    this._tickCount++;
     this._updateCPU();
     this._updateRAM();
     this._updateDisk();
@@ -233,7 +236,9 @@ export class MetricsWidget extends BaseWidget {
       return;
     }
 
+    // nvidia: solo 1 de cada NVIDIA_EVERY ticks (a menos que haya una consulta en curso)
     if (this._gpuPending) return;
+    if (this._tickCount % NVIDIA_EVERY !== 1) return;
     this._gpuPending = true;
     try {
       let proc = Gio.Subprocess.new(
@@ -292,16 +297,5 @@ export class MetricsWidget extends BaseWidget {
       if (candidates.length > 0) return `/sys/class/thermal/${candidates[0].name}/temp`;
     } catch (e) {}
     return null;
-  }
-
-  _getColor(p) {
-    if (p < 40) return "#4ade80";
-    if (p < 70) return "#facc15";
-    return "#ef4444";
-  }
-
-  _hexToRgb(hex) {
-    let n = parseInt(hex.replace("#", ""), 16);
-    return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
   }
 }
