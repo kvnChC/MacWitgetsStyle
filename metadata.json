@@ -1,8 +1,9 @@
 {
   "uuid": "mac-widgets@kevin",
   "name": "Mac Style Widgets",
-  "description": "Widgets flotantes estilo macOS en GNOME",
-  "version": 1,
+  "description": "Widgets flotantes estilo macOS en GNOME: reloj, métricas, batería, música, clima, pronóstico y procesos.",
+  "version": 2,
+  "url": "https://github.com/kvnChC/MacWitgetsStyle",
   "shell-version": ["49", "50"],
   "settings-schema": "org.gnome.shell.extensions.mac-widgets"
 }
