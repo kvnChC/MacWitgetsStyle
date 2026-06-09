@@ -17,6 +17,18 @@
       <description>When true, all widgets become interactive on top of windows and can be dragged with the mouse. Disable when done positioning.</description>
     </key>
 
+    <key name="accent-color" type="s">
+      <default>"#5ac8fa"</default>
+      <summary>Accent color (global)</summary>
+      <description>Hex color used for metric/battery rings and the edit-mode border</description>
+    </key>
+
+    <key name="vibrancy" type="b">
+      <default>true</default>
+      <summary>Background vibrancy (global)</summary>
+      <description>Blur what is behind each widget (macOS-style frosted glass)</description>
+    </key>
+
     <key name="opacity" type="i">
       <default>78</default>
       <range min="0" max="100"/>
@@ -88,6 +100,11 @@
       <summary>Preferred MPRIS player</summary>
       <description>Bus name suffix (e.g. "spotify"). Empty = first available.</description>
     </key>
+    <key name="show-controls" type="b">
+      <default>true</default>
+      <summary>Show transport controls</summary>
+      <description>Add play/pause/prev/next buttons (makes the widget interactive)</description>
+    </key>
 
   </schema>
 
@@ -131,6 +148,59 @@
       <summary>Resolved place name</summary>
       <description>e.g. "Quito, Ecuador"</description>
     </key>
+
+  </schema>
+
+  <!-- ═══════════ Reloj ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets.clock"
+          path="/org/gnome/shell/extensions/mac-widgets/clock/">
+
+    <key name="enabled" type="b"><default>true</default><summary>Enabled</summary><description>Show clock widget</description></key>
+    <key name="opacity" type="i"><default>78</default><range min="0" max="100"/><summary>Opacity</summary><description>Card opacity (0-100)</description></key>
+    <key name="center-horizontally" type="b"><default>false</default><summary>Center</summary><description>Center on monitor</description></key>
+    <key name="position-x" type="i"><default>40</default><range min="0" max="10000"/><summary>X</summary><description>px</description></key>
+    <key name="position-y" type="i"><default>480</default><range min="0" max="10000"/><summary>Y</summary><description>px</description></key>
+    <key name="monitor" type="i"><default>-1</default><range min="-1" max="32"/><summary>Monitor</summary><description>-1 = primary</description></key>
+
+    <key name="format-24h" type="b"><default>true</default><summary>24-hour format</summary><description>Use 24h clock instead of AM/PM</description></key>
+    <key name="show-seconds" type="b"><default>false</default><summary>Show seconds</summary><description>Display seconds in the time</description></key>
+    <key name="show-date" type="b"><default>true</default><summary>Show date</summary><description>Display the date below the time</description></key>
+
+  </schema>
+
+  <!-- ═══════════ Pronóstico extendido (Open-Meteo) ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets.forecast"
+          path="/org/gnome/shell/extensions/mac-widgets/forecast/">
+
+    <key name="enabled" type="b"><default>false</default><summary>Enabled</summary><description>Show forecast widget</description></key>
+    <key name="opacity" type="i"><default>78</default><range min="0" max="100"/><summary>Opacity</summary><description>Card opacity (0-100)</description></key>
+    <key name="center-horizontally" type="b"><default>false</default><summary>Center</summary><description>Center on monitor</description></key>
+    <key name="position-x" type="i"><default>40</default><range min="0" max="10000"/><summary>X</summary><description>px</description></key>
+    <key name="position-y" type="i"><default>500</default><range min="0" max="10000"/><summary>Y</summary><description>px</description></key>
+    <key name="monitor" type="i"><default>-1</default><range min="-1" max="32"/><summary>Monitor</summary><description>-1 = primary</description></key>
+
+    <key name="days" type="i"><default>4</default><range min="3" max="7"/><summary>Days</summary><description>Number of forecast days to show</description></key>
+
+  </schema>
+
+  <!-- ═══════════ Top procesos ═══════════ -->
+  <schema id="org.gnome.shell.extensions.mac-widgets.processes"
+          path="/org/gnome/shell/extensions/mac-widgets/processes/">
+
+    <key name="enabled" type="b"><default>false</default><summary>Enabled</summary><description>Show top-processes widget</description></key>
+    <key name="opacity" type="i"><default>78</default><range min="0" max="100"/><summary>Opacity</summary><description>Card opacity (0-100)</description></key>
+    <key name="center-horizontally" type="b"><default>false</default><summary>Center</summary><description>Center on monitor</description></key>
+    <key name="position-x" type="i"><default>40</default><range min="0" max="10000"/><summary>X</summary><description>px</description></key>
+    <key name="position-y" type="i"><default>640</default><range min="0" max="10000"/><summary>Y</summary><description>px</description></key>
+    <key name="monitor" type="i"><default>-1</default><range min="-1" max="32"/><summary>Monitor</summary><description>-1 = primary</description></key>
+
+    <key name="sort-by" type="s">
+      <default>"cpu"</default>
+      <choices><choice value="cpu"/><choice value="memory"/></choices>
+      <summary>Sort by</summary>
+      <description>Rank processes by cpu or memory</description>
+    </key>
+    <key name="count" type="i"><default>4</default><range min="3" max="6"/><summary>Count</summary><description>How many processes to list</description></key>
 
   </schema>
 
