@@ -6,6 +6,9 @@ import { BaseWidget, rampColor, RAMP_AMBER, RAMP_RED } from "./base.js";
 
 const UPDATE_SECONDS = 2;
 const TEMP_RING_MAX = 100;
+// Iconos que empaquetamos en icons/ porque no están en Adwaita (tema base
+// de todas las distros): el de CPU es solo de Yaru y temperature falta a veces.
+const BUNDLED_ICONS = new Set(["cpu-symbolic", "temperature-symbolic"]);
 // nvidia-smi es caro de arrancar; lo consultamos 1 de cada N ticks (≈8 s).
 // El backend AMD lee un archivo y se actualiza en cada tick.
 const NVIDIA_EVERY = 4;
@@ -36,7 +39,7 @@ export class MetricsWidget extends BaseWidget {
     if (this._gpuBackend) order.push("gpu");
 
     const defs = {
-      cpu:  ["computer-chip-symbolic", "%"],
+      cpu:  ["cpu-symbolic", "%"],
       ram:  ["media-flash-symbolic", "%"],
       disk: ["drive-harddisk-symbolic", "%"],
       temp: ["temperature-symbolic", "°C"],
@@ -89,6 +92,24 @@ export class MetricsWidget extends BaseWidget {
     }
   }
 
+  _makeIcon(iconName) {
+    const props = {
+      icon_size: this._iconSize,
+      style_class: "mac-cell-icon",
+      x_align: Clutter.ActorAlign.CENTER,
+      y_align: Clutter.ActorAlign.CENTER,
+    };
+    if (BUNDLED_ICONS.has(iconName)) {
+      const file = Gio.File.new_for_path(
+        GLib.build_filenamev([this._ext.path, "icons", `${iconName}.svg`])
+      );
+      props.gicon = new Gio.FileIcon({ file });
+    } else {
+      props.icon_name = iconName;
+    }
+    return new St.Icon(props);
+  }
+
   _makeCell(iconName, suffix = "%") {
     const size = this._cellSize;
     const ringWidth = this._ringWidth;
@@ -107,13 +128,7 @@ export class MetricsWidget extends BaseWidget {
 
     let drawing = new St.DrawingArea({ width: size, height: size });
 
-    let icon = new St.Icon({
-      icon_name: iconName,
-      icon_size: this._iconSize,
-      style_class: "mac-cell-icon",
-      x_align: Clutter.ActorAlign.CENTER,
-      y_align: Clutter.ActorAlign.CENTER,
-    });
+    let icon = this._makeIcon(iconName);
 
     head.add_child(drawing);
     head.add_child(icon);
